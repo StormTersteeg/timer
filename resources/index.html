@@ -1,0 +1,167 @@
+<style>
+#app {
+  width:calc(100% - 15px);
+  float:left;
+}
+drag-region {
+  display:block;
+  float:right;
+  width:15px;
+  height:100%;
+  background:#444;
+  transition:.3s;
+}
+drag-region:hover {
+  background:#888;
+  transition:.3s;
+}
+::-webkit-input-placeholder {
+  color: #999 !important;
+}
+input[type="text"] {
+  color: #fff !important;
+}
+
+@keyframes pulse {
+  0% {
+  background-color: #999;
+  }
+  100% {
+  background-color: #212121;
+  }
+}
+.pulse {
+  animation: pulse 3s infinite;
+}
+
+</style>
+
+<div id="app" onclick="load()" class="bg-dark-2 h-100 text-white" style="font-size:1em">
+
+  <div onclick="swap()" id="page-1" class="d-flex justify-content-center align-items-center h-100">
+  <div class="d-block">
+    <div id="timer" class="h1" style="font-size:4.2em">00:00:00</div>
+    <div id="progress" class="progress d-none">
+    <div class="progress-bar progress-bar-indeterminate bg-info" role="progressbar"></div>
+    </div>
+  </div>
+  </div>
+  <div id="page-2" class="d-none p-3 h-100">
+  <div class="row">
+    <div class="col">
+    <button onclick="swap()" class="btn btn-dark btn-sm"><span class="material-icons">arrow_back</span></button>
+    </div>
+    <div class="col">
+    <input onchange="input_hours=this.value" type="text" class="form-control" placeholder="hours">
+    </div>
+    <div class="col">
+    <input onchange="input_minutes=this.value" type="text" class="form-control" placeholder="minutes">
+    </div>
+    <div class="col">
+    <input onchange="input_seconds=this.value" type="text" class="form-control" placeholder="seconds">
+    </div>
+  </div>
+  <div class="row mt-3">
+    <div class="col">
+        <button id="start" onclick="toggle()" class="btn btn-success btn-sm w-100">start</button>
+    </div>
+    <div class="col">
+        <button id="start" onclick="pywebview.api.minimize()" class="btn btn-info btn-sm w-100">minimize</button>
+    </div>
+    <div class="col">
+        <button id="start" onclick="pywebview.api.close()" class="btn btn-danger btn-sm w-100">close</button>
+    </div>
+  </div>
+  </div>
+
+</div>
+<drag-region class="pywebview-drag-region">
+
+</drag-region>
+
+<script>
+var input_hours = 0
+var input_minutes = 0
+var input_seconds = 0
+var hours = 0
+var minutes = 0
+var seconds = 0
+var my_interval = null
+var alarm_isPlaying = false
+
+function swap() {
+  if (document.getElementById("page-1").classList.contains("pulse")) {
+  document.getElementById("page-1").classList.remove("pulse")
+  } else {
+  document.getElementById("page-1").classList.toggle("d-none")
+  document.getElementById("page-2").classList.toggle("d-none")
+  }
+  alarm_isPlaying = false
+}
+
+function toggle() {
+  if (input_hours == "") {input_hours = 0}
+  if (input_minutes == "") {input_minutes = 0}
+  if (input_seconds == "") {input_seconds = 0}
+
+  hours = input_hours
+  minutes = input_minutes
+  seconds = input_seconds
+
+  if (my_interval == null) {
+    document.getElementById("timer").innerHTML = checkTime(hours) + ":" + checkTime(minutes) + ":" + checkTime(seconds)
+
+    my_interval = setInterval(function() {
+        if (seconds == 0) {
+        if (minutes == 0) {
+        if (hours == 0) {
+        clearInterval(my_interval)
+        alarm_isPlaying = true
+        document.getElementById("start").classList.remove("btn-danger")
+        document.getElementById("start").classList.add("btn-success")
+        document.getElementById("start").innerHTML = "start"
+        document.getElementById("progress").classList.add("d-none")
+        document.getElementById("page-1").classList.add("pulse")
+        my_interval = null
+        return
+        }
+        hours--
+        minutes = 59
+        } else {
+        minutes--
+        }
+        seconds = 59
+        } else {
+        seconds--
+        }
+
+        document.getElementById("timer").innerHTML = checkTime(hours) + ":" + checkTime(minutes) + ":" + checkTime(seconds)
+    }, 1000)
+
+    document.getElementById("start").classList.remove("btn-success")
+    document.getElementById("start").classList.add("btn-danger")
+    document.getElementById("start").innerHTML = "stop"
+    document.getElementById("progress").classList.remove("d-none")
+    swap()
+
+  } else {
+    clearInterval(my_interval)
+    my_interval = null
+    document.getElementById("timer").innerHTML = "00:00:00"
+    document.getElementById("start").classList.remove("btn-danger")
+    document.getElementById("start").classList.add("btn-success")
+    document.getElementById("start").innerHTML = "start"
+    document.getElementById("progress").classList.add("d-none")
+  }
+}
+
+setInterval(function() {
+  if (alarm_isPlaying == true) {
+    audio.play()
+  }
+}, 500)
+
+function checkTime(i) {
+  return (i < 10) ? "0" + i : i
+}
+</script>
